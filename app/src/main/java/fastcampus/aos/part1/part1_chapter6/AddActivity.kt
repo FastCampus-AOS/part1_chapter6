@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.children
 import com.google.android.material.chip.Chip
 import fastcampus.aos.part1.part1_chapter6.databinding.ActivityAddBinding
 import fastcampus.aos.part1.part1_chapter6.databinding.ActivityMainBinding
@@ -14,6 +15,7 @@ import fastcampus.aos.part1.part1_chapter6.databinding.ActivityMainBinding
 class AddActivity : AppCompatActivity() {
 
     private lateinit var binding : ActivityAddBinding
+    private var originWord: Word? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,7 +24,7 @@ class AddActivity : AppCompatActivity() {
 
         initView()
         binding.addButton.setOnClickListener {
-            add()
+            if (originWord == null) add() else edit()
         }
     }
 
@@ -32,6 +34,15 @@ class AddActivity : AppCompatActivity() {
             types.forEach { text ->
                 addView(createChip(text))
             }
+        }
+
+        originWord = intent.getParcelableExtra<Word>("originWord")
+        originWord?.let { word ->
+            binding.textTextInputEditText.setText(word.text)
+            binding.meanTextInputEditText.setText(word.mean)
+
+            val selectedChip = binding.typeChipGroup.children.firstOrNull { (it as Chip).text == word.type } as? Chip
+            selectedChip?.isChecked = true
         }
     }
 
@@ -51,11 +62,24 @@ class AddActivity : AppCompatActivity() {
 
         Thread {
             AppDatabase.getInstance(this)?.wordDao()?.insert(word)
-            runOnUiThread {
-                Toast.makeText(this, "저장을 완료했습니다.", Toast.LENGTH_SHORT).show()
+            setResult(RESULT_OK, Intent().putExtra("isUpdated", true))
+            runOnUiThread { Toast.makeText(this, "저장을 완료했습니다.", Toast.LENGTH_SHORT).show() }
+            finish()
+        }.start()
+    }
+
+    private fun edit() {
+        val text = binding.textTextInputEditText.text.toString()
+        val mean = binding.meanTextInputEditText.text.toString()
+        val type = findViewById<Chip>(binding.typeChipGroup.checkedChipId).text.toString()
+        val editWord = originWord?.copy(text, mean, type)
+
+        Thread {
+            editWord?.let { word ->
+                AppDatabase.getInstance(this)?.wordDao()?.update(word)
             }
-            val intent = Intent().putExtra("isUpdated", true)
-            setResult(RESULT_OK, intent)
+            setResult(RESULT_OK, Intent().putExtra("editWord", editWord))
+            runOnUiThread { Toast.makeText(this, "수정을 완료했습니다.", Toast.LENGTH_SHORT).show() }
             finish()
         }.start()
     }

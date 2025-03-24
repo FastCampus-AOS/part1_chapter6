@@ -27,6 +27,15 @@ class MainActivity : AppCompatActivity(), WordAdapter.ItemClickListener {
         }
     }
 
+    private val updateEditWordResult = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val editWord = result.data?.getParcelableExtra<Word>("editWord")
+        if (result.resultCode == RESULT_OK && editWord != null) {
+            updateEditWord(editWord)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
@@ -35,13 +44,15 @@ class MainActivity : AppCompatActivity(), WordAdapter.ItemClickListener {
         initRecyclerView()
 
         binding.addButton.setOnClickListener {
-            Intent(this, AddActivity::class.java).let {
-                updateAddWordResult.launch(it)
-            }
+            add()
         }
 
         binding.deleteImageView.setOnClickListener {
-            deleteWord()
+            delete()
+        }
+
+        binding.editImageView.setOnClickListener {
+            edit()
         }
     }
 
@@ -75,7 +86,25 @@ class MainActivity : AppCompatActivity(), WordAdapter.ItemClickListener {
         }.start()
     }
 
-    private fun deleteWord() {
+    private fun updateEditWord(word: Word) {
+        wordAdapter.wordList.indexOfFirst { it.id == word.id }.let { index ->
+            wordAdapter.wordList[index] = word
+            runOnUiThread {
+                selectedWord = word
+                binding.textTextView.text = word.text
+                binding.meanTextView.text = word.mean
+                wordAdapter.notifyItemChanged(index)
+            }
+        }
+    }
+
+    private fun add() {
+        Intent(this, AddActivity::class.java).let {
+            updateAddWordResult.launch(it)
+        }
+    }
+
+    private fun delete() {
         if (selectedWord == null) return
 
         Thread {
@@ -93,6 +122,13 @@ class MainActivity : AppCompatActivity(), WordAdapter.ItemClickListener {
                 }
             }
         }.start()
+    }
+
+    private fun edit() {
+        if (selectedWord == null) return
+
+        val intent = Intent(this, AddActivity::class.java).putExtra("originWord", selectedWord)
+        updateEditWordResult.launch(intent)
     }
 
     override fun onClick(word: Word) {
