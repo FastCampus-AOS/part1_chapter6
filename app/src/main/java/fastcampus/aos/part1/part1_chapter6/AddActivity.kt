@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.children
+import androidx.core.widget.addTextChangedListener
 import com.google.android.material.chip.Chip
 import fastcampus.aos.part1.part1_chapter6.databinding.ActivityAddBinding
 import fastcampus.aos.part1.part1_chapter6.databinding.ActivityMainBinding
@@ -23,6 +24,8 @@ class AddActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         initView()
+
+        binding.addButton.text = if (originWord == null) "추가" else "수정"
         binding.addButton.setOnClickListener {
             if (originWord == null) add() else edit()
         }
@@ -33,6 +36,22 @@ class AddActivity : AppCompatActivity() {
         binding.typeChipGroup.apply {
             types.forEach { text ->
                 addView(createChip(text))
+            }
+        }
+
+        binding.textTextInputEditText.addTextChangedListener {
+            it?.let { text ->
+                binding.textTextInputLayout.error = when(text.length) {
+                    0 -> "단어를 입력해 주세요"
+                    1 -> "2글자 이상을 입력해 주세요"
+                    else -> null
+                }
+
+                binding.meanTextInputLayout.error = when(text.length) {
+                    0 -> "뜻을 입력해 주세요"
+                    1 -> "1글자 이상을 입력해 주세요"
+                    else -> null
+                }
             }
         }
 
