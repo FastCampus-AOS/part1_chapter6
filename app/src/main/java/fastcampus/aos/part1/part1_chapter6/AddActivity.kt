@@ -1,6 +1,7 @@
 package fastcampus.aos.part1.part1_chapter6
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -19,6 +20,9 @@ class AddActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         initView()
+        binding.addButton.setOnClickListener {
+            add()
+        }
     }
 
     private fun initView() {
@@ -36,5 +40,20 @@ class AddActivity : AppCompatActivity() {
             isCheckable = true
             isClickable = true
         }
+    }
+
+    private fun add() {
+        val text = binding.textTextInputEditText.text.toString()
+        val mean = binding.meanTextInputEditText.text.toString()
+        val type = findViewById<Chip>(binding.typeChipGroup.checkedChipId).text.toString()
+        val word = Word(text, mean, type)
+
+        Thread {
+            AppDatabase.getInstance(this)?.wordDao()?.insert(word)
+            runOnUiThread {
+                Toast.makeText(this, "저장을 완료했습니다.", Toast.LENGTH_SHORT).show()
+            }
+            finish()
+        }.start()
     }
 }
