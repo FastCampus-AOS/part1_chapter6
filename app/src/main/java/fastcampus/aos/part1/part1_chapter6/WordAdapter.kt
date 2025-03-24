@@ -8,7 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import fastcampus.aos.part1.part1_chapter6.databinding.ItemWordBinding
 
 class WordAdapter(
-    private val wordList: MutableList<Word>,
+    val wordList: MutableList<Word>,
     private val itemClickListener: ItemClickListener? = null
 ): RecyclerView.Adapter<WordAdapter.WordViewHolder>() {
 
